@@ -27,9 +27,8 @@ class Trainer(object):
             report_interval = 10
 
         model.to(device)
-        X.to(device)
-        Y.to(device)
-        self.criterion.to(device)
+        X = X.to(device)
+        Y = Y.to(device)
 
         # Training Run
         batchsize = X.shape[0]

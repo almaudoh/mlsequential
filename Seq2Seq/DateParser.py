@@ -21,12 +21,14 @@ class DateParser(nn.Module):
 
     def forward(self, X):
         # Start with zero LSTM state for the first word.
+        device = self.attention_dense_1.weight.device
         bs = X.shape[0]
-        s = torch.zeros(1, bs, self.hidden_size)
-        c = torch.zeros(1, bs, self.hidden_size)
+        s = torch.zeros(1, bs, self.hidden_size).to(device=device)
+        c = torch.zeros(1, bs, self.hidden_size).to(device=device)
+        X = X.to(device=device)
 
         # outputs = []
-        outputs = torch.zeros((X.shape[0], self.Ty, self.output_dense_3.out_features))
+        outputs = torch.zeros((X.shape[0], self.Ty, self.output_dense_3.out_features)).to(device=device)
 
         pre_out, h = self.prelstm(X)
         for t in range(self.Ty):

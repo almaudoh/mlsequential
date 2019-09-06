@@ -3,9 +3,9 @@ from faker import Faker
 import random
 from tqdm import tqdm
 from babel.dates import format_date
-from keras.utils import to_categorical
-import keras.backend as K
 import matplotlib.pyplot as plt
+
+from np_utils import to_categorical
 
 fake = Faker()
 fake.seed(12345)
@@ -162,27 +162,6 @@ def run_examples(model, input_vocabulary, inv_output_vocabulary, examples=EXAMPL
         print('input:', example)
         print('output:', predicted[-1])
     return predicted
-
-
-def softmax(x, axis=1):
-    """Softmax activation function.
-    # Arguments
-        x : Tensor.
-        axis: Integer, axis along which the softmax normalization is applied.
-    # Returns
-        Tensor, output of softmax transformation.
-    # Raises
-        ValueError: In case `dim(x) == 1`.
-    """
-    ndim = K.ndim(x)
-    if ndim == 2:
-        return K.softmax(x)
-    elif ndim > 2:
-        e = K.exp(x - K.max(x, axis=axis, keepdims=True))
-        s = K.sum(e, axis=axis, keepdims=True)
-        return e / s
-    else:
-        raise ValueError('Cannot apply softmax to a tensor that is 1D')
 
 
 def plot_attention_map(model, input_vocabulary, inv_output_vocabulary, text, n_s=128, num=6, Tx=30, Ty=10):
