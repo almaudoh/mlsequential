@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from utils import plot_grad_flow
 
 
@@ -13,7 +14,7 @@ class Trainer(object):
             'loss': []
         }
 
-    def fit(self, model, X, Y, learning_rates=None):
+    def fit(self, model, X, Y, learning_rates=None, batch_size=256):
         assert self.optimizer is not None
         assert self.criterion is not None
         # Check device
@@ -31,8 +32,8 @@ class Trainer(object):
         Y = Y.to(device)
 
         # Training Run
-        batchsize = X.shape[0]
-        input_seq_len = X.shape[1]
+        # batchsize = X.shape[0]
+        # input_seq_len = X.shape[1]
         next_lr = self.optimizer.defaults['lr']
         next_lr_epoch = self.epochs + 1
         print("LR: {:.4f}".format(next_lr))
@@ -41,26 +42,42 @@ class Trainer(object):
             next_lr_epoch, next_lr = learning_rates.pop()
 
         for epoch in range(1, self.epochs + 1):
-            self.optimizer.zero_grad()  # Clears existing gradients from previous epoch
-            # model.zero_grad()  # Clears existing gradients from previous epoch
 
-            # X.to(device)
-            output = model(X)
+            # Shuffle the input before taking batches
+            shuffled = torch.randperm(X.shape[0])
 
-            # Have to convert to 2D Tensor since pytorch doesn't handle 3D properly.
-            loss = self.criterion(output.view(-1, output.shape[2]), Y.view(-1))
-            # loss = self.criterion(output, Y)
-            loss.backward()  # Does backpropagation and calculates gradients
-            plot_grad_flow(model.named_parameters())
-            self.optimizer.step()  # Updates the weights accordingly
+            epoch_loss = []
+
+            for i in range(0, X.shape[0], batch_size):
+                # Clears existing gradients from previous epoch
+                self.optimizer.zero_grad()
+                # model.zero_grad()  # Clears existing gradients from previous epoch
+
+                indices = shuffled[i:i + batch_size]
+                batch_x, batch_y = X[indices], Y[indices]
+
+                output = model(batch_x)
+
+                # Have to convert to 2D Tensor since pytorch doesn't handle 3D properly.
+                loss = self.criterion(output.view(-1, output.shape[2]), batch_y.view(-1))
+                # loss = self.criterion(output, Y)
+
+                # Does backpropagation and calculates gradients
+                loss.backward()
+
+                plot_grad_flow(model.named_parameters())
+
+                self.optimizer.step()  # Updates the weights accordingly
+
+                epoch_loss.append(loss.item())
 
             # Update training statistics.
-            self.stats['loss'].append(loss.item())
+            self.stats['loss'].append(np.average(epoch_loss))
             self.stats['epoch'].append(epoch)
 
             if epoch % report_interval == 0:
                 print('Epoch: {}/{}.............'.format(epoch, self.epochs), end=' ')
-                print("Loss: {:.4f}".format(loss.item()))
+                print("Loss: {:.4f}".format(np.average(epoch_loss)))
 
             # Variable LR adjustments.
             if next_lr_epoch == epoch:

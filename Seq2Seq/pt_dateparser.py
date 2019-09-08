@@ -23,7 +23,7 @@ torch.set_printoptions(profile="full")
 # torch.set_printoptions(edgeitems=3)
 
 # Start
-m = 10
+m = 10000
 in_seq_len, out_seq_len = 30, 10
 n_a, n_s = 32, 64
 
@@ -48,7 +48,7 @@ X, Y, Xoh, Yoh = preprocess_data(dataset, human_vocab, machine_vocab, in_seq_len
 torch.set_printoptions(precision=4, sci_mode=False)
 
 # Define training hyperparameters
-n_epochs = 1000 #000
+n_epochs = 1700 #000
 lr = .5
 
 # Define Loss, Optimizer
@@ -99,4 +99,4 @@ with open('training_stats/' + date.today().strftime('YmdHis') + '.txt', 'w+') as
 with open('training_stats/' + str(random.random()).replace('.', '') + '.txt', 'w+') as f:
     torch.set_printoptions(profile="full")
     for parameter in model.parameters():
-        f.write(str(parameter.data.numpy()))
+        f.write(str(parameter.data.cpu().numpy()))
