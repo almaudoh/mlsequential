@@ -25,10 +25,9 @@ torch.set_printoptions(profile="full")
 # Start
 m = 10000
 in_seq_len, out_seq_len = 30, 10
-n_a, n_s = 32, 64
 
 dataset, human_vocab, machine_vocab, inv_machine_vocab = load_dataset(m)
-model = DateParser(in_seq_len, out_seq_len, n_a, n_s, len(human_vocab), len(machine_vocab))
+model = DateParser(in_seq_len, out_seq_len, len(human_vocab), len(machine_vocab))
 
 # summary(model, (1, in_seq_len, len(human_vocab)), batch_size=len(dataset), device='cpu')
 # for parameter in model.parameters():
@@ -48,30 +47,26 @@ X, Y, Xoh, Yoh = preprocess_data(dataset, human_vocab, machine_vocab, in_seq_len
 torch.set_printoptions(precision=4, sci_mode=False)
 
 # Define training hyperparameters
-n_epochs = 1700 #000
-lr = .5
+n_epochs = 20 #000
+lr = 0.5
 
 # Define Loss, Optimizer
 criterion = nn.CrossEntropyLoss()
-# optimizer = optim.Adam(model.parameters(), lr=lr, betas=(.9, .999), weight_decay=0)
-optimizer = optim.SGD(model.parameters(), lr=lr)
+optimizer = optim.Adam(model.parameters(), lr=lr, betas=(.9, .999), weight_decay=0)
 
-trainer = Trainer(epochs=n_epochs, optimizer=optimizer, criterion=criterion)
-trainer.fit(model, torch.from_numpy(Xoh), torch.from_numpy(Y))
+trainer = Trainer(optimizer=optimizer, criterion=criterion)
+trainer.fit(model, torch.from_numpy(Xoh), torch.from_numpy(Y), epochs=n_epochs, batch_size=1000)
 
 
 # Predict
 def predict(model, sentences):
     x_pred = encode_strings(sentences, human_vocab, in_seq_len)
-    # x_pred.to(device)
-
     output = model(x_pred)
-
     # print(output.detach().numpy())
 
     # Taking the class with the highest probability score from the output
     prob = output.data
-    argmax = torch.max(prob, dim = 2)[1]
+    argmax = torch.max(prob, dim=2)[1]
 
     answers = {}
     for i in range(argmax.shape[0]):

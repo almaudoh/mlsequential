@@ -4,53 +4,51 @@ from torch import nn
 
 class DateParser(nn.Module):
 
-    def __init__(self, in_seq_len, out_seq_len, n_a, n_s, in_vocab_len, out_vocab_len):
+    def __init__(self, in_seq_len, out_seq_len, in_vocab_len, out_vocab_len):
         super(DateParser, self).__init__()
-        self.hidden_size = n_s
+        self.hidden_dims = 64
+        self.input_dims = 32
         self.Tx = in_seq_len
         self.Ty = out_seq_len
-        self.prelstm = nn.LSTM(in_vocab_len, n_a, bidirectional=True, batch_first=True)
-        self.postlstm = nn.LSTM(n_s, n_s, batch_first=True)
-        self.attention_dense_1 = nn.Linear(2 * n_s, 10)
-        self.attention_dense_1a = nn.Tanh()
+        self.prelstm = nn.LSTM(in_vocab_len, self.input_dims, bidirectional=True, batch_first=True)
+        self.postlstm = nn.LSTM(self.hidden_dims, self.hidden_dims, batch_first=True)
+        self.attention_dense_1 = nn.Linear(4 * self.input_dims, 10)
+        self.tanh = nn.Tanh()
         self.attention_dense_2 = nn.Linear(10, 1)
-        self.attention_dense_2a = nn.ReLU()
+        self.relu = nn.ReLU()
         self.softmax = nn.Softmax(dim=1)
-        self.output_dense_3 = nn.Linear(2 * n_a, out_vocab_len)
-        self.output_dense_3a = nn.Softmax(dim=1)
+        self.output_dense_3 = nn.Linear(self.hidden_dims, out_vocab_len)
 
     def forward(self, X):
         # Start with zero LSTM state for the first word.
         device = self.attention_dense_1.weight.device
         bs = X.shape[0]
-        s = torch.zeros(1, bs, self.hidden_size).to(device=device)
-        c = torch.zeros(1, bs, self.hidden_size).to(device=device)
+        s = torch.zeros(1, bs, self.hidden_dims).to(device=device)
+        c = torch.zeros(1, bs, self.hidden_dims).to(device=device)
         X = X.to(device=device)
 
-        # outputs = []
         outputs = torch.zeros((X.shape[0], self.Ty, self.output_dense_3.out_features)).to(device=device)
 
-        pre_out, h = self.prelstm(X)
+        pre_out, _ = self.prelstm(X)
         for t in range(self.Ty):
             context = self.attention_layer(pre_out, s)
             _, (s, c) = self.postlstm(context, (s, c))
-            out = self.output_dense_3a(self.output_dense_3(s))
+            out = self.softmax(self.output_dense_3(s))
             outputs[:, t, :] = out[0, :, :]
 
         return outputs
 
     def attention_layer(self, pre_output, state):
         # Expand state from (1, batch_size, hidden_dims) to (seq_len, batch_size, hidden_dims)
+        # This assumes n_layer = 1 for state which comes from postlstm.
         state = torch.cat([state for _ in range(self.Tx)], dim=0)
-        # Need to transpose since state shape is (n_layers, batch_size, hidden_dims)
-        # while input is (batch_size, seq_len, hidden_dims)
-        # Note that n_layers and seq_len are always 1 so won't cause a problem.
-        # However, if these change, then transpose may not be the best approach.
-        combined = torch.cat((state.transpose(0, 1), pre_output), dim=2)
-        step = self.attention_dense_1(combined)
-        step = self.attention_dense_1a(step)
-        step = self.attention_dense_2(step)
-        step = self.attention_dense_2a(step)
-        alphas = self.softmax(step)
+
+        # Need to transpose since state shape is (seq_len, batch_size, hidden_dims)
+        # while pre_output is (batch_size, seq_len, hidden_dims)
+        combined = torch.cat((pre_output, state.transpose(0, 1)), dim=2)
+        step1 = self.tanh(self.attention_dense_1(combined))
+        step2 = self.relu(self.attention_dense_2(step1))
+        # step2 = self.attention_dense_2(step1)
+        alphas = self.softmax(step2)
         context = torch.sum(alphas * pre_output, dim=1, keepdim=True)
         return context

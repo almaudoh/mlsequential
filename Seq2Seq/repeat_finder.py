@@ -72,9 +72,9 @@ print(labels)
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.5)
-trainer = Trainer(epochs=2000, optimizer=optimizer, criterion=criterion)
+trainer = Trainer(optimizer=optimizer, criterion=criterion)
 lrs = [(0, 0.5), (1000, 0.1)]
-trainer.fit(model, examples, labels, learning_rates=lrs)
+trainer.fit(model, examples, labels, epochs=2000, learning_rates=lrs)
 
 # plt.show()
 

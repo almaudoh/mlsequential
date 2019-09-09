@@ -5,8 +5,7 @@ from utils import plot_grad_flow
 
 class Trainer(object):
 
-    def __init__(self, epochs=10, optimizer=None, criterion=None):
-        self.epochs = epochs
+    def __init__(self, optimizer=None, criterion=None):
         self.optimizer = optimizer
         self.criterion = criterion
         self.stats = {
@@ -14,7 +13,7 @@ class Trainer(object):
             'loss': []
         }
 
-    def fit(self, model, X, Y, learning_rates=None, batch_size=256):
+    def fit(self, model, X, Y, epochs=10, learning_rates=None, batch_size=500):
         assert self.optimizer is not None
         assert self.criterion is not None
         # Check device
@@ -35,13 +34,17 @@ class Trainer(object):
         # batchsize = X.shape[0]
         # input_seq_len = X.shape[1]
         next_lr = self.optimizer.defaults['lr']
-        next_lr_epoch = self.epochs + 1
+        next_lr_epoch = epochs + 1
         print("LR: {:.4f}".format(next_lr))
 
         if learning_rates and len(learning_rates):
             next_lr_epoch, next_lr = learning_rates.pop()
 
-        for epoch in range(1, self.epochs + 1):
+        # Update training statistics.
+        self.stats['loss'] = []
+        self.stats['epoch'] = []
+
+        for epoch in range(1, epochs + 1):
 
             # Shuffle the input before taking batches
             shuffled = torch.randperm(X.shape[0])
@@ -76,7 +79,7 @@ class Trainer(object):
             self.stats['epoch'].append(epoch)
 
             if epoch % report_interval == 0:
-                print('Epoch: {}/{}.............'.format(epoch, self.epochs), end=' ')
+                print('Epoch: {}/{}.............'.format(epoch, epochs), end=' ')
                 print("Loss: {:.4f}".format(np.average(epoch_loss)))
 
             # Variable LR adjustments.

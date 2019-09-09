@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 # %matplotlib inline
 
 
-m = 10 #10000
+m = 10000
 dataset, human_vocab, machine_vocab, inv_machine_vocab = load_dataset(m)
 
 print(dataset[:10])
@@ -27,10 +27,10 @@ Tx = 30
 Ty = 10
 X, Y, Xoh, Yoh = preprocess_data(dataset, human_vocab, machine_vocab, Tx, Ty)
 
-# print("X.shape", X,shape)
-# print("Y.shape", Y,shape)
-# print("Xoh.shape", Xoh,shape)
-# print("Yoh.shape", Yoh,shape)
+print("X.shape", X.shape)
+print("Y.shape", Y.shape)
+print("Xoh.shape", Xoh.shape)
+print("Yoh.shape", Yoh.shape)
 
 index = 2
 print("Source date:", dataset[index][0])
