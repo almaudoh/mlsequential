@@ -24,7 +24,7 @@ torch.set_printoptions(profile="full")
 # torch.set_printoptions(edgeitems=3)
 
 # Start
-m = 1000
+m = 10000
 in_seq_len, out_seq_len = 30, 10
 
 dataset, human_vocab, machine_vocab, inv_machine_vocab = load_dataset(m)
@@ -48,8 +48,8 @@ X, Y, Xoh, Yoh = preprocess_data(dataset, human_vocab, machine_vocab, in_seq_len
 torch.set_printoptions(precision=4, sci_mode=False)
 
 # Define training hyperparameters
-n_epochs = 200 #000
-lr = 0.05
+n_epochs = 2000
+lr = 0.15
 
 # Define Loss, Optimizer
 criterion = nn.CrossEntropyLoss()
@@ -82,7 +82,8 @@ print(predict(model, strings))
 # Plot training statistics
 plot_grad_flow(trainer.stats['gradient_flow'])
 plt.figure(1)
-plt.plot(trainer.stats['epoch'], trainer.stats['loss'])
+plt.plot(trainer.stats['loss'])
+# plt.plot(trainer.stats['epoch'], trainer.stats['loss'])
 # plt.yscale('log')
 plt.show()
 
