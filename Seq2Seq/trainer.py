@@ -1,6 +1,4 @@
 import torch
-import numpy as np
-from utils import plot_grad_flow
 
 
 class Trainer(object):
@@ -10,7 +8,8 @@ class Trainer(object):
         self.criterion = criterion
         self.stats = {
             'epoch': [],
-            'loss': []
+            'loss': [],
+            'gradient_flow': [],
         }
 
     def fit(self, model, X, Y, epochs=10, learning_rates=None, batch_size=500):
@@ -49,8 +48,6 @@ class Trainer(object):
             # Shuffle the input before taking batches
             shuffled = torch.randperm(X.shape[0])
 
-            epoch_loss = []
-
             for i in range(0, X.shape[0], batch_size):
                 # Clears existing gradients from previous epoch
                 self.optimizer.zero_grad()
@@ -65,22 +62,19 @@ class Trainer(object):
                 loss = self.criterion(output.view(-1, output.shape[2]), batch_y.view(-1))
                 # loss = self.criterion(output, Y)
 
-                # Does backpropagation and calculates gradients
+                # Does back propagation and calculates gradients
                 loss.backward()
+                # Updates the weights accordingly
+                self.optimizer.step()
 
-                plot_grad_flow(model.named_parameters())
-
-                self.optimizer.step()  # Updates the weights accordingly
-
-                epoch_loss.append(loss.item())
-
-            # Update training statistics.
-            self.stats['loss'].append(np.average(epoch_loss))
-            self.stats['epoch'].append(epoch)
+                # Update training statistics.
+                self.save_gradient_flow(model.named_parameters())
+                self.stats['loss'].append(loss.item())
+                self.stats['epoch'].append(epoch)
 
             if epoch % report_interval == 0:
                 print('Epoch: {}/{}.............'.format(epoch, epochs), end=' ')
-                print("Loss: {:.4f}".format(np.average(epoch_loss)))
+                print("Loss: {:.4f}".format(loss.item()))
 
             # Variable LR adjustments.
             if next_lr_epoch == epoch:
@@ -90,3 +84,16 @@ class Trainer(object):
 
                 if len(learning_rates):
                     next_lr_epoch, next_lr = learning_rates.pop()
+
+    def save_gradient_flow(self, named_parameters):
+        ave_grads = []
+        layers = []
+        for n, p in named_parameters:
+            if p.requires_grad and "bias" not in n:
+                layers.append(n)
+                ave_grads.append(p.grad.abs().mean())
+
+        self.stats['gradient_flow'].append({
+            'layers': layers,
+            'grads': ave_grads,
+        })

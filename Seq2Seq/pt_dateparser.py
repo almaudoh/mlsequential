@@ -13,6 +13,7 @@ from torchsummary import summary
 from trainer import Trainer
 from nmt_utils import load_dataset, preprocess_data
 from my_nmt_utils import encode_strings, decode_strings
+from utils import plot_grad_flow
 
 torch.manual_seed(1)
 # np.random.seed(1)
@@ -23,7 +24,7 @@ torch.set_printoptions(profile="full")
 # torch.set_printoptions(edgeitems=3)
 
 # Start
-m = 10000
+m = 1000
 in_seq_len, out_seq_len = 30, 10
 
 dataset, human_vocab, machine_vocab, inv_machine_vocab = load_dataset(m)
@@ -47,8 +48,8 @@ X, Y, Xoh, Yoh = preprocess_data(dataset, human_vocab, machine_vocab, in_seq_len
 torch.set_printoptions(precision=4, sci_mode=False)
 
 # Define training hyperparameters
-n_epochs = 20 #000
-lr = 0.5
+n_epochs = 200 #000
+lr = 0.05
 
 # Define Loss, Optimizer
 criterion = nn.CrossEntropyLoss()
@@ -79,8 +80,10 @@ strings = ['4/28/90', 'thursday january 26 1995']
 print(predict(model, strings))
 
 # Plot training statistics
-plt.figure(2)
+plot_grad_flow(trainer.stats['gradient_flow'])
+plt.figure(1)
 plt.plot(trainer.stats['epoch'], trainer.stats['loss'])
+# plt.yscale('log')
 plt.show()
 
 if not os.path.isdir('training_stats'):
