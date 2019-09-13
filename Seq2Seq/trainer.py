@@ -37,7 +37,7 @@ class Trainer(object):
         print("LR: {:.4f}".format(next_lr))
 
         if learning_rates and len(learning_rates):
-            next_lr_epoch, next_lr = learning_rates.pop()
+            next_lr_epoch, next_lr = learning_rates.pop(0)
 
         # Update training statistics.
         self.stats['loss'] = []
@@ -45,14 +45,13 @@ class Trainer(object):
 
         for epoch in range(1, epochs + 1):
 
-            if len(learning_rates):
-                next_lr_epoch, next_lr = learning_rates.pop()
-
             # Variable LR adjustments.
             if next_lr_epoch == epoch:
                 for param_group in self.optimizer.param_groups:
                     param_group['lr'] = next_lr
                 print("LR: {:.4f}".format(next_lr))
+                if learning_rates and len(learning_rates):
+                    next_lr_epoch, next_lr = learning_rates.pop(0)
 
             # Shuffle the input before taking batches
             shuffled = torch.randperm(X.shape[0])

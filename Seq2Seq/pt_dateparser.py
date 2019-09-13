@@ -49,9 +49,9 @@ X, Y, Xoh, Yoh = preprocess_data(dataset, human_vocab, machine_vocab, in_seq_len
 torch.set_printoptions(precision=4, sci_mode=False)
 
 # Define training hyperparameters
-n_epochs = 2000
+n_epochs = 1000
 lr = 0.15
-lr_sched = [(0, .15), (1000, .015), (1500, .005), (3000, .005), (3000, .001)]
+lr_sched = [(1, .15), (1000, .05), (4000, .01), (8000, .005), (9500, .001)]
 
 # Define Loss, Optimizer
 criterion = nn.CrossEntropyLoss()
