@@ -24,10 +24,11 @@ torch.set_printoptions(profile="full")
 # torch.set_printoptions(edgeitems=3)
 
 # Start
-m = 10000
+batches = 10000
+batch_size = 1000
 in_seq_len, out_seq_len = 30, 10
 
-dataset, human_vocab, machine_vocab, inv_machine_vocab = load_dataset(m)
+dataset, human_vocab, machine_vocab, inv_machine_vocab = load_dataset(batches)
 model = DateParser(in_seq_len, out_seq_len, len(human_vocab), len(machine_vocab))
 
 # summary(model, (1, in_seq_len, len(human_vocab)), batch_size=len(dataset), device='cpu')
@@ -50,13 +51,15 @@ torch.set_printoptions(precision=4, sci_mode=False)
 # Define training hyperparameters
 n_epochs = 2000
 lr = 0.15
+lr_sched = [(0, .15), (1000, .015), (1500, .005), (3000, .005), (3000, .001)]
 
 # Define Loss, Optimizer
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(.9, .999), weight_decay=0)
 
 trainer = Trainer(optimizer=optimizer, criterion=criterion)
-trainer.fit(model, torch.from_numpy(Xoh), torch.from_numpy(Y), epochs=n_epochs, batch_size=1000)
+trainer.fit(model, torch.from_numpy(Xoh), torch.from_numpy(Y), epochs=n_epochs, batch_size=batch_size,
+            learning_rates=lr_sched)
 
 
 # Predict
@@ -91,11 +94,11 @@ if not os.path.isdir('training_stats'):
     os.mkdir('training_stats')
     print("Created new directory for training stats")
 
-with open('training_stats/' + date.today().strftime('YmdHis') + '.txt', 'w+') as f:
-    f.write(str(trainer.stats))
+# with open('training_stats/' + date.today().strftime('YmdHis') + '.txt', 'w+') as f:
+#     f.write(str(trainer.stats))
 
 # Save weights
-with open('training_stats/' + str(random.random()).replace('.', '') + '.txt', 'w+') as f:
-    torch.set_printoptions(profile="full")
-    for parameter in model.parameters():
-        f.write(str(parameter.data.cpu().numpy()))
+# with open('training_stats/weights-' + str(random.random()).replace('.', '') + '.txt', 'w+') as f:
+#     torch.set_printoptions(profile="full")
+#     for parameter in model.parameters():
+#         f.write(str(parameter.data.cpu().numpy()))

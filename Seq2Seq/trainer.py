@@ -45,6 +45,15 @@ class Trainer(object):
 
         for epoch in range(1, epochs + 1):
 
+            if len(learning_rates):
+                next_lr_epoch, next_lr = learning_rates.pop()
+
+            # Variable LR adjustments.
+            if next_lr_epoch == epoch:
+                for param_group in self.optimizer.param_groups:
+                    param_group['lr'] = next_lr
+                print("LR: {:.4f}".format(next_lr))
+
             # Shuffle the input before taking batches
             shuffled = torch.randperm(X.shape[0])
 
@@ -76,14 +85,6 @@ class Trainer(object):
                 print('Epoch: {}/{}.............'.format(epoch, epochs), end=' ')
                 print("Loss: {:.4f}".format(loss.item()))
 
-            # Variable LR adjustments.
-            if next_lr_epoch == epoch:
-                for param_group in self.optimizer.param_groups:
-                    param_group['lr'] = next_lr
-                print("LR: {:.4f}".format(next_lr))
-
-                if len(learning_rates):
-                    next_lr_epoch, next_lr = learning_rates.pop()
 
     def save_gradient_flow(self, named_parameters):
         ave_grads = []
