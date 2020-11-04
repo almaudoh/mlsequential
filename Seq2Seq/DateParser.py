@@ -30,6 +30,12 @@ class DateParser(nn.Module):
         outputs = torch.zeros((X.shape[0], self.Ty, self.output_dense_3.out_features)).to(device=device)
 
         pre_out, _ = self.prelstm(X)
+
+        # context = self.attention_layer(pre_out, s)
+        # outputs = self.tanh(self.classify_dense(pre_out))
+        # outputs = self.relu(self.output_dense_3(outputs))
+        # outputs = self.softmax2(self.output_dense_3(context))
+        # outputs = self.softmax2(self.output_dense_3(context))
         for t in range(self.Ty):
             context = self.attention_layer(pre_out, s)
             _, (s, c) = self.postlstm(context, (s, c))

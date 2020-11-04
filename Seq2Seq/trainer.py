@@ -84,12 +84,11 @@ class Trainer(object):
                 print('Epoch: {}/{}.............'.format(epoch, epochs), end=' ')
                 print("Loss: {:.4f}".format(loss.item()))
 
-
     def save_gradient_flow(self, named_parameters):
         ave_grads = []
         layers = []
         for n, p in named_parameters:
-            if p.requires_grad and "bias" not in n:
+            if p.requires_grad and p.grad is not None and "bias" not in n:
                 layers.append(n)
                 ave_grads.append(p.grad.abs().mean())
 

@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 
 def plot_grad_flow(grad_flow_lines, figure=2):
     plt.figure(figure)
+    # plt.subplots_adjust(top=0.92, bottom=0.42, left=0.12, right=0.95, hspace=0.50, wspace=0.25)
+    plt.subplots_adjust(left=0.14, bottom=0.42)
     for grad_lines in grad_flow_lines:
         grads = grad_lines['grads']
         layers = grad_lines['layers']
