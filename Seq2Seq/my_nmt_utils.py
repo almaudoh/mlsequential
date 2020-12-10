@@ -17,7 +17,7 @@ import pandas as pd
 #     ]
 
 def _load_dataset():
-    dataset = pd.read_xlsx('date data.xlsx')
+    dataset = pd.read_excel('date data.xlsx')
 
     human_vocab = {
         ' ': 0, '.': 1, '/': 2, '0': 3, '1': 4, '2': 5, '3': 6, '4': 7, '5': 8, '6': 9, '7': 10, '8': 11,
